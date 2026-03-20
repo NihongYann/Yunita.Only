@@ -1,0 +1,1181 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Idul Fitri - Yunita Indah Talenty</title>
+<link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Playfair+Display:wght@400;700;900&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --blue-deep: #0a1628;
+    --blue-mid: #1a3a6b;
+    --blue-bright: #2563eb;
+    --blue-glow: #60a5fa;
+    --blue-light: #bfdbfe;
+    --gold: #f4c430;
+    --gold-light: #fde68a;
+    --white: #ffffff;
+    --cream: #fffbf0;
+  }
+
+  html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: var(--blue-deep);
+    font-family: 'Poppins', sans-serif;
+  }
+
+  /* ===== SCREEN MANAGEMENT ===== */
+  .screen {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.8s ease, transform 0.8s ease;
+  }
+
+  .screen.hidden {
+    opacity: 0;
+    pointer-events: none;
+    transform: scale(1.05);
+  }
+
+  /* ===== FINGERPRINT SCREEN ===== */
+  #fp-screen {
+    background: radial-gradient(ellipse at center, #0d1f3c 0%, #070d1a 100%);
+    gap: 32px;
+  }
+
+  .fp-title {
+    color: var(--blue-light);
+    font-size: clamp(13px, 3.5vw, 16px);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    opacity: 0.7;
+    font-weight: 300;
+  }
+
+  .fp-wrapper {
+    position: relative;
+    width: clamp(160px, 45vw, 220px);
+    height: clamp(160px, 45vw, 220px);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Outer ring */
+  .fp-ring {
+    position: absolute;
+    inset: -12px;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    background: linear-gradient(135deg, var(--blue-glow), transparent, var(--blue-bright)) border-box;
+    -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: destination-out;
+    mask-composite: exclude;
+    animation: ringRotate 4s linear infinite;
+    opacity: 0.6;
+  }
+
+  @keyframes ringRotate {
+    to { transform: rotate(360deg); }
+  }
+
+  .fp-circle {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, #1a3a6b, #0a1628);
+    border: 1.5px solid rgba(96, 165, 250, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+    box-shadow:
+      0 0 40px rgba(37, 99, 235, 0.3),
+      inset 0 0 40px rgba(37, 99, 235, 0.1);
+  }
+
+  /* Fingerprint SVG lines */
+  .fp-svg {
+    width: 65%;
+    height: 65%;
+    opacity: 0.35;
+    transition: opacity 0.3s;
+  }
+
+  .fp-svg path {
+    fill: none;
+    stroke: var(--blue-glow);
+    stroke-width: 1.5;
+    stroke-linecap: round;
+  }
+
+  /* Scan line */
+  .scan-line {
+    position: absolute;
+    left: 10%;
+    right: 10%;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--blue-glow), var(--gold), var(--blue-glow), transparent);
+    top: -10%;
+    opacity: 0;
+    box-shadow: 0 0 12px var(--blue-glow);
+    transition: opacity 0.3s;
+  }
+
+  /* Shimmer overlay */
+  .fp-shimmer {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: linear-gradient(180deg, rgba(96,165,250,0.15) 0%, transparent 50%);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  /* Progress dots */
+  .fp-dots {
+    display: flex;
+    gap: 10px;
+  }
+
+  .fp-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--blue-mid);
+    border: 1px solid rgba(96, 165, 250, 0.4);
+    transition: all 0.3s;
+  }
+
+  .fp-instruction {
+    color: rgba(191, 219, 254, 0.6);
+    font-size: clamp(12px, 3.5vw, 14px);
+    text-align: center;
+    font-weight: 300;
+    animation: blink 2s ease-in-out infinite;
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 0.6; }
+    50% { opacity: 0.2; }
+  }
+
+  /* ===== SCANNING STATE ===== */
+  .fp-wrapper.scanning .fp-svg { opacity: 0.8; }
+  .fp-wrapper.scanning .scan-line { opacity: 1; animation: scanMove 0.8s ease-in-out infinite; }
+  .fp-wrapper.scanning .fp-shimmer { opacity: 1; }
+  .fp-wrapper.scanning .fp-circle {
+    box-shadow: 0 0 60px rgba(37, 99, 235, 0.6), inset 0 0 30px rgba(37, 99, 235, 0.2);
+    border-color: rgba(96, 165, 250, 0.7);
+  }
+
+  @keyframes scanMove {
+    0% { top: 10%; }
+    50% { top: 80%; }
+    100% { top: 10%; }
+  }
+
+  /* Dot fill animation */
+  .fp-dot.filled {
+    background: var(--blue-glow);
+    box-shadow: 0 0 8px var(--blue-glow);
+    border-color: var(--blue-glow);
+  }
+
+  /* ===== SUCCESS STATE ===== */
+  .fp-wrapper.success .fp-svg { opacity: 1; }
+  .fp-wrapper.success .scan-line { opacity: 0; }
+  .fp-wrapper.success .fp-circle {
+    border-color: var(--gold);
+    box-shadow: 0 0 60px rgba(244, 196, 48, 0.5), inset 0 0 30px rgba(244, 196, 48, 0.1);
+    animation: successPulse 0.6s ease-out;
+  }
+  .fp-wrapper.success .fp-svg path { stroke: var(--gold); }
+
+  @keyframes successPulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.06); }
+    100% { transform: scale(1); }
+  }
+
+  /* ===== NAME REVEAL ===== */
+  #name-screen {
+    background: radial-gradient(ellipse at center, #0d1f3c 0%, #070d1a 100%);
+    gap: 28px;
+  }
+
+  .name-verified {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--gold);
+    font-size: clamp(11px, 3vw, 13px);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    opacity: 0;
+    animation: fadeUp 0.6s ease forwards 0.2s;
+  }
+
+  .check-icon {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--gold);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    color: var(--blue-deep);
+    font-weight: 700;
+  }
+
+  .name-display {
+    text-align: center;
+    opacity: 0;
+    animation: fadeUp 0.8s ease forwards 0.5s;
+  }
+
+  .name-display .greeting {
+    font-family: 'Amiri', serif;
+    font-size: clamp(14px, 4vw, 18px);
+    color: var(--blue-light);
+    font-style: italic;
+    margin-bottom: 12px;
+    opacity: 0.7;
+  }
+
+  .name-display .main-name {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(32px, 9vw, 52px);
+    font-weight: 900;
+    background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 40%, var(--white) 60%, var(--gold) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1.1;
+    filter: drop-shadow(0 0 20px rgba(244, 196, 48, 0.4));
+    animation: nameShimmer 3s ease infinite 1.2s;
+    background-size: 200%;
+  }
+
+  @keyframes nameShimmer {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+  }
+
+  .name-particles {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+  }
+
+  .particle {
+    position: absolute;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--gold);
+    opacity: 0;
+  }
+
+  .btn-lanjut {
+    opacity: 0;
+    animation: fadeUp 0.6s ease forwards 1.2s;
+    padding: 14px 40px;
+    border: none;
+    border-radius: 50px;
+    background: linear-gradient(135deg, var(--blue-bright), var(--blue-mid));
+    color: white;
+    font-family: 'Poppins', sans-serif;
+    font-size: clamp(13px, 3.5vw, 15px);
+    font-weight: 600;
+    letter-spacing: 2px;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    border: 1px solid rgba(96, 165, 250, 0.4);
+    box-shadow: 0 8px 30px rgba(37, 99, 235, 0.4);
+    transition: transform 0.2s, box-shadow 0.2s;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .btn-lanjut::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, transparent 30%, rgba(255,255,255,0.15) 50%, transparent 70%);
+    transform: translateX(-100%);
+    transition: transform 0.5s;
+  }
+
+  .btn-lanjut:hover::before, .btn-lanjut:active::before {
+    transform: translateX(100%);
+  }
+
+  .btn-lanjut:active { transform: scale(0.96); }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ===== IDUL FITRI SCREEN ===== */
+  #fitri-screen {
+    background: #071426;
+    overflow: hidden;
+    justify-content: flex-start;
+    padding: 0;
+  }
+
+  /* Animated sky background */
+  .fitri-bg {
+    position: absolute;
+    inset: 0;
+    background: 
+      radial-gradient(ellipse at 50% 0%, rgba(37,99,235,0.4) 0%, transparent 60%),
+      radial-gradient(ellipse at 20% 80%, rgba(10,22,40,0.8) 0%, transparent 50%),
+      linear-gradient(180deg, #060e1e 0%, #0a1628 40%, #071426 100%);
+  }
+
+  /* Stars */
+  .stars-layer {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+  }
+
+  .star {
+    position: absolute;
+    border-radius: 50%;
+    background: white;
+    animation: twinkle var(--dur, 3s) ease-in-out infinite var(--delay, 0s);
+  }
+
+  @keyframes twinkle {
+    0%, 100% { opacity: var(--max-op, 0.8); transform: scale(1); }
+    50% { opacity: 0.1; transform: scale(0.5); }
+  }
+
+  /* Mosque silhouette */
+  .mosque-wrap {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 42%;
+    pointer-events: none;
+  }
+
+  .mosque-svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  /* Floating lanterns */
+  .lanterns {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+  }
+
+  .lantern {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    animation: floatLantern var(--fdur, 8s) ease-in-out infinite var(--fdelay, 0s);
+  }
+
+  .lantern-body {
+    width: var(--lw, 22px);
+    height: var(--lh, 32px);
+    border-radius: 40% 40% 50% 50%;
+    background: radial-gradient(circle at 40% 35%, var(--lc2, #fde68a), var(--lc1, #f59e0b));
+    box-shadow: 0 0 var(--lglow, 15px) var(--lc1, #f59e0b), inset 0 0 8px rgba(255,255,255,0.4);
+    position: relative;
+  }
+
+  .lantern-string {
+    width: 1px;
+    height: 20px;
+    background: rgba(255,255,255,0.3);
+  }
+
+  .lantern-glow {
+    position: absolute;
+    inset: -6px;
+    border-radius: 50%;
+    background: radial-gradient(circle, var(--lc1, #f59e0b) 0%, transparent 70%);
+    opacity: 0.4;
+    animation: lanternPulse 2s ease-in-out infinite var(--fdelay, 0s);
+  }
+
+  @keyframes floatLantern {
+    0%, 100% { transform: translateY(0px) rotate(-3deg); }
+    25% { transform: translateY(-18px) rotate(3deg); }
+    50% { transform: translateY(-8px) rotate(-2deg); }
+    75% { transform: translateY(-22px) rotate(2deg); }
+  }
+
+  @keyframes lanternPulse {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 0.7; }
+  }
+
+  /* Moon */
+  .moon {
+    position: absolute;
+    top: 8%;
+    right: 12%;
+    width: clamp(60px, 18vw, 90px);
+    height: clamp(60px, 18vw, 90px);
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, #fff9e6, #fde68a, #f4c430);
+    box-shadow: 0 0 40px rgba(244,196,48,0.6), 0 0 80px rgba(244,196,48,0.3), 0 0 120px rgba(244,196,48,0.15);
+    animation: moonGlow 4s ease-in-out infinite;
+  }
+
+  .moon::before {
+    content: '';
+    position: absolute;
+    top: 8%;
+    left: 12%;
+    width: 75%;
+    height: 75%;
+    border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.5), transparent);
+  }
+
+  @keyframes moonGlow {
+    0%, 100% { box-shadow: 0 0 40px rgba(244,196,48,0.6), 0 0 80px rgba(244,196,48,0.3); }
+    50% { box-shadow: 0 0 55px rgba(244,196,48,0.8), 0 0 100px rgba(244,196,48,0.4), 0 0 140px rgba(244,196,48,0.2); }
+  }
+
+  /* Ornamental top */
+  .fitri-ornament-top {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, transparent, var(--gold), var(--blue-glow), var(--gold), transparent);
+  }
+
+  /* Floating petals */
+  .petal {
+    position: absolute;
+    opacity: 0;
+    animation: petalFall var(--pd, 8s) linear infinite var(--pdelay, 0s);
+    font-size: var(--ps, 14px);
+    pointer-events: none;
+  }
+
+  @keyframes petalFall {
+    0% { opacity: 0; transform: translateY(-20px) rotate(0deg); top: -5%; left: var(--px, 50%); }
+    10% { opacity: 0.8; }
+    90% { opacity: 0.4; }
+    100% { opacity: 0; transform: translateY(100vh) rotate(720deg); top: 100%; }
+  }
+
+  /* Main content card */
+  .fitri-content {
+    position: relative;
+    z-index: 10;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0 20px;
+    overflow-y: auto;
+    padding-top: max(env(safe-area-inset-top), 20px);
+    padding-bottom: max(env(safe-area-inset-bottom), 30px);
+    scrollbar-width: none;
+  }
+
+  .fitri-content::-webkit-scrollbar { display: none; }
+
+  .fitri-header {
+    text-align: center;
+    margin-top: 16px;
+    margin-bottom: 20px;
+    animation: fadeDown 0.8s ease forwards;
+  }
+
+  @keyframes fadeDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .arabic-bismillah {
+    font-family: 'Amiri', serif;
+    font-size: clamp(20px, 6vw, 28px);
+    color: var(--gold-light);
+    text-align: center;
+    margin-bottom: 6px;
+    animation: fadeDown 0.8s ease forwards 0.2s;
+    opacity: 0;
+    text-shadow: 0 0 20px rgba(244,196,48,0.4);
+  }
+
+  .fitri-tag {
+    font-size: clamp(9px, 2.5vw, 11px);
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--blue-glow);
+    opacity: 0;
+    animation: fadeDown 0.6s ease forwards 0.4s;
+    margin-bottom: 4px;
+  }
+
+  .fitri-main-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(28px, 8vw, 42px);
+    font-weight: 900;
+    background: linear-gradient(135deg, #fde68a, #f4c430, #fffbf0, #f4c430, #fde68a);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-align: center;
+    line-height: 1.1;
+    opacity: 0;
+    animation: fadeDown 0.8s ease forwards 0.6s;
+    background-size: 200%;
+    animation: fadeDown 0.8s ease forwards 0.6s, titleShimmer 4s ease infinite 1.5s;
+    filter: drop-shadow(0 0 15px rgba(244,196,48,0.5));
+  }
+
+  @keyframes titleShimmer {
+    0%, 100% { background-position: 0%; }
+    50% { background-position: 100%; }
+  }
+
+  .fitri-sub {
+    font-family: 'Amiri', serif;
+    font-size: clamp(13px, 4vw, 17px);
+    color: var(--blue-light);
+    text-align: center;
+    font-style: italic;
+    opacity: 0;
+    animation: fadeDown 0.6s ease forwards 0.9s;
+    margin-top: 4px;
+  }
+
+  /* Decorative divider */
+  .gold-divider {
+    width: 80%;
+    max-width: 300px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold), var(--blue-glow), var(--gold), transparent);
+    margin: 16px auto;
+    position: relative;
+    opacity: 0;
+    animation: fadeIn 0.6s ease forwards 1.1s;
+  }
+
+  .gold-divider::before {
+    content: '✦';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    color: var(--gold);
+    background: #0a1628;
+    padding: 0 10px;
+    font-size: 12px;
+    animation: rotate360 8s linear infinite;
+  }
+
+  @keyframes rotate360 {
+    to { transform: translate(-50%, -50%) rotate(360deg); }
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  /* Card ucapan */
+  .ucapan-card {
+    background: linear-gradient(135deg, rgba(26,58,107,0.6), rgba(10,22,40,0.8));
+    border: 1px solid rgba(96, 165, 250, 0.2);
+    border-radius: 20px;
+    padding: 22px;
+    width: 100%;
+    max-width: 380px;
+    position: relative;
+    overflow: hidden;
+    opacity: 0;
+    animation: scaleIn 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) forwards 1.3s;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05);
+  }
+
+  .ucapan-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at top left, rgba(96,165,250,0.08), transparent 60%);
+    pointer-events: none;
+  }
+
+  .ucapan-card::after {
+    content: '';
+    position: absolute;
+    top: -1px; left: 20%; right: 20%;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  }
+
+  @keyframes scaleIn {
+    from { opacity: 0; transform: scale(0.85); }
+    to { opacity: 1; transform: scale(1); }
+  }
+
+  .ucapan-card .from-label {
+    font-size: clamp(10px, 2.8vw, 12px);
+    color: var(--blue-glow);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    opacity: 0.7;
+  }
+
+  .ucapan-card .sender-name {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(20px, 6vw, 28px);
+    font-weight: 700;
+    color: var(--gold-light);
+    margin-bottom: 14px;
+    text-shadow: 0 0 20px rgba(244,196,48,0.3);
+  }
+
+  .ucapan-text {
+    font-size: clamp(12px, 3.5vw, 14px);
+    color: rgba(191, 219, 254, 0.85);
+    line-height: 1.8;
+    font-weight: 300;
+  }
+
+  .ucapan-text strong {
+    color: var(--gold-light);
+    font-weight: 600;
+  }
+
+  /* Bottom ornament grid */
+  .ornament-row {
+    display: flex;
+    gap: 12px;
+    margin-top: 18px;
+    opacity: 0;
+    animation: fadeUp 0.6s ease forwards 1.8s;
+    width: 100%;
+    max-width: 380px;
+    justify-content: center;
+  }
+
+  .ornament-badge {
+    flex: 1;
+    max-width: 110px;
+    background: linear-gradient(135deg, rgba(37,99,235,0.25), rgba(10,22,40,0.6));
+    border: 1px solid rgba(96,165,250,0.2);
+    border-radius: 14px;
+    padding: 14px 8px;
+    text-align: center;
+    backdrop-filter: blur(8px);
+    transition: transform 0.2s;
+  }
+
+  .ornament-badge:active { transform: scale(0.95); }
+
+  .ornament-emoji { font-size: clamp(22px, 6vw, 28px); display: block; margin-bottom: 6px; }
+  .ornament-label {
+    font-size: clamp(9px, 2.5vw, 11px);
+    color: var(--blue-light);
+    letter-spacing: 1px;
+    opacity: 0.7;
+  }
+
+  /* Ketupat decoration */
+  .ketupat-float {
+    position: absolute;
+    font-size: var(--ks, 28px);
+    opacity: var(--ko, 0.15);
+    animation: floatKetupat var(--kd, 10s) ease-in-out infinite var(--kdelay, 0s);
+    pointer-events: none;
+  }
+
+  @keyframes floatKetupat {
+    0%, 100% { transform: translateY(0) rotate(var(--kr, 0deg)) scale(1); }
+    50% { transform: translateY(-20px) rotate(calc(var(--kr, 0deg) + 15deg)) scale(1.05); }
+  }
+
+  /* Bottom footer */
+  .fitri-footer {
+    margin-top: 16px;
+    text-align: center;
+    opacity: 0;
+    animation: fadeIn 0.6s ease forwards 2.2s;
+    padding-bottom: 10px;
+  }
+
+  .fitri-footer p {
+    font-size: clamp(10px, 3vw, 12px);
+    color: rgba(96, 165, 250, 0.4);
+    letter-spacing: 2px;
+  }
+
+  .pulse-dot {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--gold);
+    animation: pulseDot 2s ease-in-out infinite;
+    vertical-align: middle;
+    margin: 0 6px;
+    box-shadow: 0 0 6px var(--gold);
+  }
+
+  @keyframes pulseDot {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.4); opacity: 0.5; }
+  }
+
+  /* ===== SHOOTING STARS ===== */
+  .shooting-star {
+    position: absolute;
+    height: 1px;
+    background: linear-gradient(90deg, white, transparent);
+    animation: shoot var(--ss-dur, 3s) linear infinite var(--ss-delay, 0s);
+    opacity: 0;
+    width: var(--ss-w, 80px);
+    transform-origin: right;
+  }
+
+  @keyframes shoot {
+    0% { opacity: 0; transform: translateX(0) translateY(0) rotate(var(--ss-angle, -30deg)); }
+    10% { opacity: 1; }
+    30% { opacity: 0; transform: translateX(var(--ss-tx, -200px)) translateY(var(--ss-ty, 100px)) rotate(var(--ss-angle, -30deg)); }
+    100% { opacity: 0; transform: translateX(var(--ss-tx, -200px)) translateY(var(--ss-ty, 100px)) rotate(var(--ss-angle, -30deg)); }
+  }
+
+  /* Ripple effect on tap */
+  .ripple {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(96, 165, 250, 0.4);
+    transform: scale(0);
+    animation: rippleAnim 0.6s linear;
+    pointer-events: none;
+  }
+
+  @keyframes rippleAnim {
+    to { transform: scale(4); opacity: 0; }
+  }
+
+</style>
+</head>
+<body>
+
+<!-- ===== SCREEN 1: FINGERPRINT ===== -->
+<div id="fp-screen" class="screen">
+  <p class="fp-title">Identifikasi Pengguna</p>
+
+  <div class="fp-wrapper" id="fpWrapper">
+    <div class="fp-ring"></div>
+    <div class="fp-circle">
+      <div class="fp-shimmer"></div>
+      <div class="scan-line"></div>
+      <!-- Fingerprint SVG -->
+      <svg class="fp-svg" viewBox="0 0 100 100">
+        <path d="M50 15 C30 15, 15 28, 15 45 C15 62, 25 75, 35 82"/>
+        <path d="M50 20 C33 20, 20 32, 20 47 C20 62, 29 73, 38 79"/>
+        <path d="M50 25 C36 25, 25 36, 25 49 C25 63, 33 72, 41 76"/>
+        <path d="M50 30 C39 30, 30 40, 30 51 C30 64, 38 71, 44 73"/>
+        <path d="M50 35 C42 35, 35 43, 35 53 C35 63, 42 70, 48 71"/>
+        <path d="M50 40 C45 40, 40 47, 40 55 C40 63, 45 68, 50 69"/>
+        <path d="M50 15 C70 15, 85 28, 85 45 C85 62, 75 75, 65 82"/>
+        <path d="M50 20 C67 20, 80 32, 80 47 C80 62, 71 73, 62 79"/>
+        <path d="M50 25 C64 25, 75 36, 75 49 C75 63, 67 72, 59 76"/>
+        <path d="M50 30 C61 30, 70 40, 70 51 C70 64, 62 71, 56 73"/>
+        <path d="M50 35 C58 35, 65 43, 65 53 C65 63, 58 70, 52 71"/>
+        <path d="M42 83 C44 87, 47 90, 50 91"/>
+        <path d="M58 83 C56 87, 53 90, 50 91"/>
+        <path d="M50 91 L50 95"/>
+      </svg>
+    </div>
+  </div>
+
+  <!-- Progress dots -->
+  <div class="fp-dots" id="fpDots">
+    <div class="fp-dot" id="dot1"></div>
+    <div class="fp-dot" id="dot2"></div>
+    <div class="fp-dot" id="dot3"></div>
+  </div>
+
+  <p class="fp-instruction" id="fpInstruction">Tahan jari selama 3 detik</p>
+</div>
+
+<!-- ===== SCREEN 2: NAME REVEAL ===== -->
+<div id="name-screen" class="screen hidden">
+  <div class="name-particles" id="nameParticles"></div>
+
+  <div class="name-verified">
+    <div class="check-icon">✓</div>
+    <span>Terverifikasi</span>
+  </div>
+
+  <div class="name-display">
+    <p class="greeting">Selamat datang,</p>
+    <h1 class="main-name">Yunita<br>Indah Talenty</h1>
+  </div>
+
+  <button class="btn-lanjut" id="btnLanjut" onclick="goToFitri()">
+    ✨ &nbsp; LANJUT &nbsp; ✨
+  </button>
+</div>
+
+<!-- ===== SCREEN 3: IDUL FITRI ===== -->
+<div id="fitri-screen" class="screen hidden">
+  <div class="fitri-bg"></div>
+  <div class="fitri-ornament-top"></div>
+
+  <!-- Stars -->
+  <div class="stars-layer" id="starsLayer"></div>
+
+  <!-- Moon -->
+  <div class="moon"></div>
+
+  <!-- Lanterns -->
+  <div class="lanterns" id="lanterns"></div>
+
+  <!-- Floating petals -->
+  <div id="petals"></div>
+
+  <!-- Mosque silhouette -->
+  <div class="mosque-wrap">
+    <svg class="mosque-svg" viewBox="0 0 400 200" preserveAspectRatio="xMidYMax meet">
+      <defs>
+        <linearGradient id="mosqueGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" style="stop-color:#1a3a6b;stop-opacity:0.9"/>
+          <stop offset="100%" style="stop-color:#0a1628;stop-opacity:1"/>
+        </linearGradient>
+        <linearGradient id="domeGlow" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" style="stop-color:#2563eb;stop-opacity:0.3"/>
+          <stop offset="100%" style="stop-color:#1a3a6b;stop-opacity:0"/>
+        </linearGradient>
+      </defs>
+      <!-- Main mosque body -->
+      <rect x="50" y="130" width="300" height="70" fill="url(#mosqueGrad)"/>
+      <!-- Main dome -->
+      <ellipse cx="200" cy="130" rx="55" ry="40" fill="url(#mosqueGrad)"/>
+      <ellipse cx="200" cy="130" rx="55" ry="40" fill="url(#domeGlow)"/>
+      <!-- Side domes -->
+      <ellipse cx="120" cy="140" rx="33" ry="24" fill="url(#mosqueGrad)"/>
+      <ellipse cx="280" cy="140" rx="33" ry="24" fill="url(#mosqueGrad)"/>
+      <!-- Minarets -->
+      <rect x="35" y="80" width="18" height="90" rx="3" fill="url(#mosqueGrad)"/>
+      <ellipse cx="44" cy="80" rx="10" ry="16" fill="url(#mosqueGrad)"/>
+      <rect x="347" y="80" width="18" height="90" rx="3" fill="url(#mosqueGrad)"/>
+      <ellipse cx="356" cy="80" rx="10" ry="16" fill="url(#mosqueGrad)"/>
+      <!-- Minaret tops -->
+      <polygon points="44,65 38,80 50,80" fill="#f4c430" opacity="0.9"/>
+      <polygon points="356,65 350,80 362,80" fill="#f4c430" opacity="0.9"/>
+      <!-- Main dome top -->
+      <polygon points="200,90 196,102 204,102" fill="#f4c430" opacity="0.9"/>
+      <!-- Windows -->
+      <rect x="85" y="150" width="14" height="18" rx="7" fill="rgba(244,196,48,0.2)" stroke="rgba(244,196,48,0.4)" stroke-width="0.5"/>
+      <rect x="110" y="150" width="14" height="18" rx="7" fill="rgba(244,196,48,0.2)" stroke="rgba(244,196,48,0.4)" stroke-width="0.5"/>
+      <rect x="186" y="148" width="28" height="24" rx="14" fill="rgba(244,196,48,0.15)" stroke="rgba(244,196,48,0.3)" stroke-width="0.5"/>
+      <rect x="276" y="150" width="14" height="18" rx="7" fill="rgba(244,196,48,0.2)" stroke="rgba(244,196,48,0.4)" stroke-width="0.5"/>
+      <rect x="301" y="150" width="14" height="18" rx="7" fill="rgba(244,196,48,0.2)" stroke="rgba(244,196,48,0.4)" stroke-width="0.5"/>
+      <!-- Ground -->
+      <rect x="0" y="195" width="400" height="10" fill="#070d1a"/>
+      <!-- Glow on ground -->
+      <ellipse cx="200" cy="198" rx="120" ry="6" fill="rgba(37,99,235,0.15)"/>
+    </svg>
+  </div>
+
+  <!-- Floating decorations -->
+  <span class="ketupat-float" style="--ks:30px;--ko:0.12;--kd:9s;--kdelay:0s;--kr:10deg;top:60%;left:5%">🪔</span>
+  <span class="ketupat-float" style="--ks:24px;--ko:0.1;--kd:11s;--kdelay:2s;--kr:-8deg;top:30%;left:4%">⭐</span>
+  <span class="ketupat-float" style="--ks:26px;--ko:0.12;--kd:8s;--kdelay:1s;--kr:5deg;top:50%;right:4%">🌙</span>
+  <span class="ketupat-float" style="--ks:20px;--ko:0.1;--kd:12s;--kdelay:3s;--kr:-12deg;top:25%;right:5%">✨</span>
+
+  <!-- Main scrollable content -->
+  <div class="fitri-content">
+    <div class="fitri-header">
+      <p class="arabic-bismillah">بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ</p>
+      <p class="fitri-tag">✦ 1 Syawal 1446 H ✦</p>
+      <h1 class="fitri-main-title">Selamat<br>Hari Raya<br>Idul Fitri</h1>
+      <p class="fitri-sub">Minal Aidin Wal Faizin</p>
+    </div>
+
+    <div class="gold-divider"></div>
+
+    <div class="ucapan-card">
+      <p class="from-label">Dari</p>
+      <p class="sender-name">Yunita Indah Talenty</p>
+      <p class="ucapan-text">
+        Di hari yang suci dan penuh berkah ini,<br>
+        <strong>mohon maaf lahir dan batin</strong> atas segala khilaf dan salah, baik yang disengaja maupun tidak.<br><br>
+        Semoga <strong>Idul Fitri 1446 H</strong> ini membawa kebahagiaan, keberkahan, dan kedamaian untuk kita semua. 🌙✨<br><br>
+        <strong>Taqabbalallahu minna wa minkum.</strong>
+      </p>
+    </div>
+
+    <div class="ornament-row">
+      <div class="ornament-badge">
+        <span class="ornament-emoji">🕌</span>
+        <span class="ornament-label">Idul Fitri</span>
+      </div>
+      <div class="ornament-badge">
+        <span class="ornament-emoji">🌙</span>
+        <span class="ornament-label">1 Syawal</span>
+      </div>
+      <div class="ornament-badge">
+        <span class="ornament-emoji">🤝</span>
+        <span class="ornament-label">Maaf Lahir Batin</span>
+      </div>
+    </div>
+
+    <div class="fitri-footer">
+      <p><span class="pulse-dot"></span> Yunita Indah Talenty <span class="pulse-dot"></span></p>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== FINGERPRINT LOGIC =====
+const fpWrapper = document.getElementById('fpWrapper');
+const fpInstruction = document.getElementById('fpInstruction');
+let scanInterval, dotInterval;
+let dotCount = 0;
+let isScanning = false;
+let scanTimeout;
+
+function startScan(e) {
+  if (isScanning) return;
+  isScanning = true;
+  fpWrapper.classList.add('scanning');
+  fpInstruction.style.animation = 'none';
+  fpInstruction.textContent = 'Memindai...';
+
+  // Ripple effect
+  const rect = fpWrapper.getBoundingClientRect();
+  const ripple = document.createElement('div');
+  ripple.className = 'ripple';
+  const size = Math.max(rect.width, rect.height);
+  ripple.style.cssText = `width:${size}px;height:${size}px;left:${(rect.width-size)/2}px;top:${(rect.height-size)/2}px;`;
+  fpWrapper.querySelector('.fp-circle').appendChild(ripple);
+  setTimeout(() => ripple.remove(), 700);
+
+  // Dots
+  dotCount = 0;
+  clearInterval(dotInterval);
+  dotInterval = setInterval(() => {
+    if (dotCount < 3) {
+      document.getElementById('dot' + (dotCount + 1)).classList.add('filled');
+      dotCount++;
+    }
+  }, 1000);
+
+  // After 3s -> success
+  scanTimeout = setTimeout(() => {
+    fpWrapper.classList.remove('scanning');
+    fpWrapper.classList.add('success');
+    fpInstruction.textContent = '✓ Teridentifikasi';
+    fpInstruction.style.color = '#f4c430';
+    fpInstruction.style.animation = 'none';
+    fpInstruction.style.opacity = '1';
+
+    // Celebrate dots
+    ['dot1','dot2','dot3'].forEach(id => {
+      const d = document.getElementById(id);
+      d.style.background = '#f4c430';
+      d.style.boxShadow = '0 0 8px #f4c430';
+    });
+
+    setTimeout(() => showNameScreen(), 800);
+  }, 3000);
+}
+
+function stopScan() {
+  if (!isScanning) return;
+  clearTimeout(scanTimeout);
+  clearInterval(dotInterval);
+  isScanning = false;
+  fpWrapper.classList.remove('scanning');
+  fpInstruction.textContent = 'Tahan jari selama 3 detik';
+  fpInstruction.style.animation = 'blink 2s ease-in-out infinite';
+  fpInstruction.style.color = '';
+  dotCount = 0;
+  ['dot1','dot2','dot3'].forEach(id => document.getElementById(id).classList.remove('filled'));
+}
+
+fpWrapper.addEventListener('mousedown', startScan);
+fpWrapper.addEventListener('touchstart', (e) => { e.preventDefault(); startScan(e); }, { passive: false });
+fpWrapper.addEventListener('mouseup', stopScan);
+fpWrapper.addEventListener('mouseleave', stopScan);
+fpWrapper.addEventListener('touchend', stopScan);
+fpWrapper.addEventListener('touchcancel', stopScan);
+
+// ===== SCREEN TRANSITIONS =====
+function showNameScreen() {
+  const fpScreen = document.getElementById('fp-screen');
+  const nameScreen = document.getElementById('name-screen');
+
+  fpScreen.classList.add('hidden');
+  setTimeout(() => {
+    nameScreen.classList.remove('hidden');
+    spawnParticles();
+  }, 400);
+}
+
+function spawnParticles() {
+  const container = document.getElementById('nameParticles');
+  for (let i = 0; i < 30; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    p.style.cssText = `
+      left: ${Math.random() * 100}%;
+      top: ${Math.random() * 100}%;
+      width: ${Math.random() * 5 + 2}px;
+      height: ${Math.random() * 5 + 2}px;
+      background: ${Math.random() > 0.5 ? '#f4c430' : '#60a5fa'};
+      animation: particleFloat ${2 + Math.random() * 3}s ease-in-out infinite ${Math.random() * 2}s;
+    `;
+    container.appendChild(p);
+  }
+}
+
+function goToFitri() {
+  const nameScreen = document.getElementById('name-screen');
+  const fitriScreen = document.getElementById('fitri-screen');
+
+  nameScreen.classList.add('hidden');
+  setTimeout(() => {
+    fitriScreen.classList.remove('hidden');
+    buildFitriScene();
+  }, 400);
+}
+
+// ===== BUILD FITRI SCENE =====
+function buildFitriScene() {
+  buildStars();
+  buildLanterns();
+  buildPetals();
+  buildShootingStars();
+}
+
+function buildStars() {
+  const layer = document.getElementById('starsLayer');
+  const count = 80;
+  for (let i = 0; i < count; i++) {
+    const s = document.createElement('div');
+    s.className = 'star';
+    const size = Math.random() * 2.5 + 0.5;
+    const maxOp = Math.random() * 0.7 + 0.3;
+    s.style.cssText = `
+      left: ${Math.random() * 100}%;
+      top: ${Math.random() * 65}%;
+      width: ${size}px;
+      height: ${size}px;
+      --dur: ${2 + Math.random() * 4}s;
+      --delay: ${Math.random() * 4}s;
+      --max-op: ${maxOp};
+    `;
+    layer.appendChild(s);
+  }
+}
+
+function buildLanterns() {
+  const container = document.getElementById('lanterns');
+  const configs = [
+    { left: '8%', top: '5%', lw: '20px', lh: '28px', lc1: '#f59e0b', lc2: '#fde68a', lglow: '12px', fdur: '8s', fdelay: '0s' },
+    { left: '18%', top: '2%', lw: '16px', lh: '22px', lc1: '#ef4444', lc2: '#fca5a5', lglow: '10px', fdur: '9s', fdelay: '1.5s' },
+    { right: '10%', top: '4%', lw: '22px', lh: '30px', lc1: '#10b981', lc2: '#6ee7b7', lglow: '14px', fdur: '7s', fdelay: '0.5s' },
+    { right: '22%', top: '1%', lw: '14px', lh: '20px', lc1: '#f4c430', lc2: '#fef08a', lglow: '10px', fdur: '10s', fdelay: '2s' },
+    { left: '32%', top: '6%', lw: '18px', lh: '25px', lc1: '#8b5cf6', lc2: '#c4b5fd', lglow: '12px', fdur: '8.5s', fdelay: '1s' },
+    { right: '35%', top: '3%', lw: '15px', lh: '21px', lc1: '#3b82f6', lc2: '#93c5fd', lglow: '10px', fdur: '9.5s', fdelay: '2.5s' },
+  ];
+
+  configs.forEach(cfg => {
+    const l = document.createElement('div');
+    l.className = 'lantern';
+    const pos = cfg.right ? `right:${cfg.right};` : `left:${cfg.left};`;
+    l.style.cssText = `${pos}top:${cfg.top};--fdur:${cfg.fdur};--fdelay:${cfg.fdelay};`;
+    l.innerHTML = `
+      <div class="lantern-string"></div>
+      <div class="lantern-body" style="--lw:${cfg.lw};--lh:${cfg.lh};--lc1:${cfg.lc1};--lc2:${cfg.lc2};--lglow:${cfg.lglow};width:${cfg.lw};height:${cfg.lh};">
+        <div class="lantern-glow" style="--lc1:${cfg.lc1};--fdelay:${cfg.fdelay};"></div>
+      </div>
+    `;
+    container.appendChild(l);
+  });
+}
+
+function buildPetals() {
+  const container = document.getElementById('petals');
+  const emojis = ['✨', '🌸', '⭐', '🌟', '💫', '✦'];
+  for (let i = 0; i < 12; i++) {
+    const p = document.createElement('div');
+    p.className = 'petal';
+    p.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+    p.style.cssText = `
+      --pd: ${6 + Math.random() * 8}s;
+      --pdelay: ${Math.random() * 8}s;
+      --ps: ${10 + Math.random() * 12}px;
+      --px: ${Math.random() * 100}%;
+    `;
+    container.appendChild(p);
+  }
+}
+
+function buildShootingStars() {
+  const layer = document.getElementById('starsLayer');
+  for (let i = 0; i < 4; i++) {
+    const s = document.createElement('div');
+    s.className = 'shooting-star';
+    const angle = -(20 + Math.random() * 25);
+    s.style.cssText = `
+      top: ${5 + Math.random() * 35}%;
+      left: ${20 + Math.random() * 60}%;
+      --ss-dur: ${4 + Math.random() * 5}s;
+      --ss-delay: ${i * 3 + Math.random() * 2}s;
+      --ss-w: ${60 + Math.random() * 60}px;
+      --ss-angle: ${angle}deg;
+      --ss-tx: ${-(150 + Math.random() * 100)}px;
+      --ss-ty: ${80 + Math.random() * 60}px;
+    `;
+    layer.appendChild(s);
+  }
+}
+
+// Particle animation style
+const particleStyle = document.createElement('style');
+particleStyle.textContent = `
+@keyframes particleFloat {
+  0%, 100% { opacity: 0; transform: translateY(0) scale(1); }
+  20% { opacity: 1; }
+  50% { opacity: 0.8; transform: translateY(-30px) scale(1.2); }
+  80% { opacity: 0.3; }
+}
+`;
+document.head.appendChild(particleStyle);
+</script>
+</body>
+</html>
